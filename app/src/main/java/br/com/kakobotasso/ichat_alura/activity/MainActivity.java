@@ -1,16 +1,16 @@
 package br.com.kakobotasso.ichat_alura.activity;
 
 import br.com.kakobotasso.ichat_alura.adapter.MessageAdapter;
+import br.com.kakobotasso.ichat_alura.app.ChatApplication;
 import br.com.kakobotasso.ichat_alura.callbacks.GetMessagesCallback;
 import br.com.kakobotasso.ichat_alura.callbacks.SendMessageCallback;
+import br.com.kakobotasso.ichat_alura.components.ChatComponent;
 import br.com.kakobotasso.ichat_alura.models.Message;
 
 import androidx.appcompat.app.AppCompatActivity;
 import br.com.kakobotasso.ichat_alura.R;
 import br.com.kakobotasso.ichat_alura.services.ChatService;
 import retrofit2.Call;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 import android.os.Bundle;
 import android.view.View;
@@ -19,8 +19,9 @@ import android.widget.EditText;
 import android.widget.ListView;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+
+import javax.inject.Inject;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,23 +30,25 @@ public class MainActivity extends AppCompatActivity {
     private Button button;
     private ListView lvMessages;
     private List<Message> messageList = new ArrayList<>();
-    private ChatService chatService;
+
+    @Inject
+    ChatService chatService;
+
+    private ChatComponent component;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        ChatApplication app = (ChatApplication) getApplication();
+        component = app.getComponent();
+        component.inject(this);
+
         lvMessages = findViewById(R.id.lv_messages);
 
         MessageAdapter adapter = new MessageAdapter(messageList, this, clientId);
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.15.102:8080/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        chatService = retrofit.create(ChatService.class);
         getMessagesFromAPI();
 
         lvMessages.setAdapter(adapter);
