@@ -10,10 +10,12 @@ import br.com.kakobotasso.ichat_alura.models.Message;
 import androidx.appcompat.app.AppCompatActivity;
 import br.com.kakobotasso.ichat_alura.R;
 import br.com.kakobotasso.ichat_alura.services.ChatService;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import retrofit2.Call;
 
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -26,9 +28,15 @@ import javax.inject.Inject;
 public class MainActivity extends AppCompatActivity {
 
     private int clientId = 1;
-    private EditText editText;
-    private Button button;
-    private ListView lvMessages;
+    @BindView(R.id.et_text)
+    EditText editText;
+
+    @BindView(R.id.bt_send)
+    Button button;
+
+    @BindView(R.id.lv_messages)
+    ListView lvMessages;
+
     private List<Message> messageList = new ArrayList<>();
 
     @Inject
@@ -41,27 +49,23 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        ButterKnife.bind(this);
+
         ChatApplication app = (ChatApplication) getApplication();
         component = app.getComponent();
         component.inject(this);
 
-        lvMessages = findViewById(R.id.lv_messages);
 
         MessageAdapter adapter = new MessageAdapter(messageList, this, clientId);
 
         getMessagesFromAPI();
 
         lvMessages.setAdapter(adapter);
+    }
 
-        editText = findViewById(R.id.et_text);
-
-        button = findViewById(R.id.bt_send);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                chatService.send(new Message(clientId, editText.getText().toString())).enqueue(new SendMessageCallback());
-            }
-        });
+    @OnClick(R.id.bt_send)
+    public void sendMessage() {
+        chatService.send(new Message(clientId, editText.getText().toString())).enqueue(new SendMessageCallback());
     }
 
     public void addToList(Message message) {
