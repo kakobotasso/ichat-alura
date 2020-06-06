@@ -1,11 +1,16 @@
 package br.com.kakobotasso.ichat_alura.activity;
 
 import br.com.kakobotasso.ichat_alura.adapter.MessageAdapter;
+import br.com.kakobotasso.ichat_alura.callbacks.GetMessagesCallback;
+import br.com.kakobotasso.ichat_alura.callbacks.SendMessageCallback;
 import br.com.kakobotasso.ichat_alura.models.Message;
 
 import androidx.appcompat.app.AppCompatActivity;
 import br.com.kakobotasso.ichat_alura.R;
 import br.com.kakobotasso.ichat_alura.services.ChatService;
+import retrofit2.Call;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import android.os.Bundle;
 import android.view.View;
@@ -32,15 +37,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         lvMessages = findViewById(R.id.lv_messages);
-//        messageList = Arrays.asList(
-//                new Message(1, "Hello class"),
-//                new Message(2, "Hi")
-//        );
 
         MessageAdapter adapter = new MessageAdapter(messageList, this, clientId);
 
-        chatService = new ChatService(this);
-        chatService.getMessages();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://192.168.15.102:8080/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        chatService = retrofit.create(ChatService.class);
+        getMessagesFromAPI();
 
         lvMessages.setAdapter(adapter);
 
@@ -50,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                chatService.send(new Message(clientId, editText.getText().toString()));
+                chatService.send(new Message(clientId, editText.getText().toString())).enqueue(new SendMessageCallback());
             }
         });
     }
@@ -62,6 +68,11 @@ public class MainActivity extends AppCompatActivity {
 
         lvMessages.setAdapter(adapter);
 
-        chatService.getMessages();
+        getMessagesFromAPI();
+    }
+
+    public void getMessagesFromAPI() {
+        Call<Message> call = chatService.getMessages();
+        call.enqueue(new GetMessagesCallback(this));
     }
 }
